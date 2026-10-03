@@ -1,0 +1,39 @@
+name: MontePilot tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }} / Python 3.11
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install MontePilot
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Run test suite
+        run: python -m unittest discover -s tests -v
