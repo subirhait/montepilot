@@ -236,7 +236,7 @@ python examples/run_multilevel_education.py
 Application documentation is available in
 [`docs/APPLICATIONS.md`](docs/APPLICATIONS.md).
 
-## What â€œAI-readyâ€ means
+## What "AI-ready" means in this version
 
 MontePilot does not send data or code to an external model. The numerical engine
 remains deterministic and testable. It produces a structured audit payload and
