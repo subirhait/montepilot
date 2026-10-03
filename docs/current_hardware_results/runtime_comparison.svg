@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="410" viewBox="0 0 920 410">
+<rect width="100%" height="100%" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#17202A}.title{font-size:21px;font-weight:700}.label{font-size:15px}.value{font-size:14px;font-weight:700}.note{font-size:12px;fill:#5D6D7E}</style>
+<text class="title" x="205" y="32">Median warm-state runtime (log scale)</text>
+<text class="note" x="205" y="52">mean_n5000_r20000; shorter is faster</text>
+<text class="label" x="193" y="94" text-anchor="end">base r batched</text>
+<rect x="205" y="77" width="624.0" height="24" rx="4" fill="#7A5195"/>
+<text class="value" x="838.0" y="94">3.200000 s</text>
+<text class="label" x="193" y="148" text-anchor="end">base r scalar loop</text>
+<rect x="205" y="131" width="611.5" height="24" rx="4" fill="#BC5090"/>
+<text class="value" x="825.5" y="148">2.910000 s</text>
+<text class="label" x="193" y="202" text-anchor="end">torch cpu</text>
+<rect x="205" y="185" width="559.1" height="24" rx="4" fill="#2F4B7C"/>
+<text class="value" x="773.1" y="202">1.955700 s</text>
+<text class="label" x="193" y="256" text-anchor="end">numpy</text>
+<rect x="205" y="239" width="522.2" height="24" rx="4" fill="#003F5C"/>
+<text class="value" x="736.2" y="256">1.478412 s</text>
+<text class="label" x="193" y="310" text-anchor="end">torch xpu</text>
+<rect x="205" y="293" width="34.0" height="24" rx="4" fill="#FFA600"/>
+<text class="value" x="248.0" y="310">0.036460 s</text>
+<text class="note" x="205" y="388">Bars use log10 runtime; labels show untransformed seconds.</text>
+</svg>

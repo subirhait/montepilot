@@ -1,0 +1,14 @@
+MontePilot 0.6 Intel XPU application benchmark
+===============================================
+
+Open Anaconda Prompt in this project directory and run:
+
+conda activate montepilot
+python -m pip install -e .
+montepilot doctor
+python -m unittest discover -s tests -v
+python benchmarks\benchmark_publication.py --profile full --precision float32 --workloads psychometric_alpha_n1000_k20 cluster_trial_j100_m30 --min-block-seconds 0.5 --cold-start-repeats 0 --output-dir application_benchmark_results_v06
+
+Compress only the new output folder:
+
+powershell -NoProfile -Command "Compress-Archive -Path 'application_benchmark_results_v06\*' -DestinationPath 'application_benchmark_results_v06.zip' -Force"

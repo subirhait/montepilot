@@ -1,0 +1,7 @@
+workload,backend,precision,probe_seconds,minimum_block_seconds,initial_iterations,final_iterations,calibration_retries,maximum_inner_iterations,all_recorded_blocks_reached_target
+psychometric_alpha_n1000_k20,numpy,float32,0.6351577999885194,0.5,1,1,0,512,True
+psychometric_alpha_n1000_k20,torch_cpu,float32,0.21063730004243553,0.5,3,3,0,512,True
+psychometric_alpha_n1000_k20,torch_xpu,float32,0.036143200006335974,0.5,14,14,0,512,True
+cluster_trial_j100_m30,numpy,float32,0.30494300002465025,0.5,2,3,1,512,True
+cluster_trial_j100_m30,torch_cpu,float32,0.07542260002810508,0.5,7,7,0,512,True
+cluster_trial_j100_m30,torch_xpu,float32,0.015089699998497963,0.5,34,44,1,512,True

@@ -1,0 +1,21 @@
+MontePilot 0.5.2 controlled-input Intel XPU validation
+======================================================
+
+Open Anaconda Prompt and run these commands from the extracted project folder:
+
+conda activate montepilot
+python -m pip install -e .
+montepilot doctor
+python -m unittest discover -s tests -v
+python benchmarks\validate_precision.py --profile full --precision float32 --backends numpy torch_cpu torch_xpu --seeds 5 --output-dir precision_validation_results_v052
+
+Expected final interpretation:
+
+All workload/backend/seed rows should show PASS. The command writes:
+
+precision_validation_results_v052\controlled_precision_runs.csv
+precision_validation_results_v052\precision_validation_report.json
+precision_validation_results_v052\precision_validation_summary.md
+
+If any row fails, preserve the entire output folder and do not change the
+tolerances before inspecting the discrepancy.

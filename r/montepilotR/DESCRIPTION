@@ -1,0 +1,17 @@
+Package: montepilotR
+Type: Package
+Title: R Interface to Adaptive Device-Aware Monte Carlo Simulation
+Version: 0.0.5.9001
+Authors@R: person("Subir", "Hait", role = c("aut", "cre"), email = "maintainer@example.org")
+Description: Development interface to the Python 'montepilot' engine for
+    adaptive, reproducible, device-aware Monte Carlo simulation. This package
+    is an early prototype and is not yet prepared for CRAN submission.
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.2
+Imports:
+    jsonlite,
+    reticulate
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
