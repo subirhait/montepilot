@@ -3,8 +3,11 @@ message: "If you use this development prototype, please cite the software archiv
 title: "MontePilot: Adaptive Device-Aware Monte Carlo Simulation"
 type: software
 authors:
-  - family-names: Hait
-    given-names: Subir
-version: 0.6.0.dev0
-date-released: 2026-10-03
-license: MIT
+  - family-names: "Hait"
+    given-names: "Subir"
+version: "0.6.0.dev0"
+date-released: "2026-10-03"
+doi: "10.5281/zenodo.23127965"
+license: "MIT"
+repository-code: "https://github.com/subirhait/montepilot"
+url: "https://github.com/subirhait/montepilot"
