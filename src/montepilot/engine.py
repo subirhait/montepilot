@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 import time
 from datetime import datetime, timezone
@@ -15,7 +14,7 @@ from .advice import Advisor, rule_based_advice
 from .backends import ComputeBackend, probe_backends, resolve_backend
 from .checkpoint import checkpoint_path, load_checkpoint, save_checkpoint
 from .config import RunConfig
-from .design import BatchContext, SimulationDesign, coerce_batch_estimate
+from .design import BatchContext, SimulationDesign, coerce_batch_estimate, derive_seed
 from .metrics import BinaryMoments, OnlineMoments
 from .results import ConditionResult, SimulationReport
 from .validation import validate_batch
@@ -23,11 +22,6 @@ from .validation import validate_batch
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _derive_seed(master: int, condition_index: int, batch_index: int) -> int:
-    raw = f"{master}:{condition_index}:{batch_index}".encode("utf-8")
-    return int.from_bytes(hashlib.blake2b(raw, digest_size=8).digest(), "little") % (2**63 - 1)
 
 
 class SimulationRunner:
@@ -46,9 +40,10 @@ class SimulationRunner:
     ):
         context = BatchContext(
             backend=backend,
-            seed=_derive_seed(self.config.seed, condition_index, batch_index),
+            seed=derive_seed(self.config.seed, condition_index, batch_index),
             condition_index=condition_index,
             batch_index=batch_index,
+            master_seed=self.config.seed,
         )
         data = design.generator(context, condition, batch_size)
         return coerce_batch_estimate(design.estimator(data, context, condition))

@@ -5,11 +5,25 @@ from unittest.mock import patch
 
 from montepilot import RunConfig, SimulationDesign, SimulationRunner, run
 from montepilot.backends import ComputeBackend
-from montepilot.design import BatchEstimate
+from montepilot.design import BatchContext, BatchEstimate, derive_seed
 from montepilot.examples import normal_mean_design
 
 
 class EngineTests(unittest.TestCase):
+    def test_stream_seeds_hash_the_full_design_position(self):
+        context = BatchContext(
+            backend=ComputeBackend("numpy"),
+            seed=derive_seed(42, 3, 7, 0),
+            condition_index=3,
+            batch_index=7,
+            master_seed=42,
+        )
+        self.assertEqual(context.seed_for(0), derive_seed(42, 3, 7, 0))
+        self.assertEqual(context.seed_for(1), derive_seed(42, 3, 7, 1))
+        self.assertNotEqual(context.seed_for(0), context.seed_for(1))
+        with self.assertRaises(ValueError):
+            context.seed_for(-1)
+
     def test_auto_expected_reps_validation(self):
         with self.assertRaises(ValueError):
             RunConfig(min_reps=100, max_reps=1000, auto_expected_reps=99)

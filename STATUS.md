@@ -110,3 +110,25 @@ application-benchmark smoke test completes with zero failed replications.
 
 These unverified items are release blockers for public PyPI or CRAN submission,
 but they do not prevent evaluation of the CPU-based Python MVP.
+
+Version 0.6.1 (2026-10-04) makes the two application designs compute
+variances in two passes (`variance_method="centered"`, now the default).
+The one-pass form, which loses precision in float32 when data have a large
+location, is retained only so the benchmark harness reproduces the v0.6.0
+timings (`MONTEPILOT_APP_VARIANCE=one_pass`, the harness default). Both
+designs gained a `location_offset` argument for stress testing. Secondary
+random streams now hash `(master, condition, batch, stream_id)` instead of
+using adjacent integer seeds, and a regression test covers this behavior.
+All 41 tests pass on Linux (NumPy backend). The new
+`benchmarks/supplementary_experiments.py` runs the hardware-independent
+float32 stress test, adaptive-stopping comparison, checkpoint-recovery
+check, and analytic coverage/bias checks reported in the manuscript; its
+output is `results/supplementary_experiments.json`. The 0.6.1 suite has not
+yet been run on the Windows Intel Arc workstation.
+
+Version 0.6.2 (protocol frozen 2026-10-05) adds a benchmark-only vectorized
+logistic-IRLS workload, explicit convergence and failure definitions,
+controlled-input convergence-disagreement reporting, environment capture, and
+an orchestrated laptop/A100 workflow. Logistic IRLS is not exported as a
+public built-in design. Full laptop and A100 result rows remain pending until
+the tagged protocol has been run and its downloaded checksums verified.

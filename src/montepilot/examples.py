@@ -62,7 +62,7 @@ def linear_regression_design(
         x = context.backend.normal((batch_size, n, p), seed=context.seed)
         epsilon = context.backend.normal(
             (batch_size, n),
-            seed=context.seed + 1,
+            seed=context.seed_for(1),
             sd=float(condition["noise_sd"]),
         )
         coefficients = context.backend.asarray(beta)
@@ -100,9 +100,9 @@ def ipw_ate_design(
         x = context.backend.normal((batch_size, n), seed=context.seed)
         propensity = context.backend.clip(context.backend.sigmoid(0.7 * x), 0.05, 0.95)
         treatment = (
-            context.backend.uniform((batch_size, n), seed=context.seed + 1) < propensity
+            context.backend.uniform((batch_size, n), seed=context.seed_for(1)) < propensity
         )
-        noise = context.backend.normal((batch_size, n), seed=context.seed + 2)
+        noise = context.backend.normal((batch_size, n), seed=context.seed_for(2))
         outcome = float(condition["treatment_effect"]) * treatment + 0.5 * x + noise
         return treatment, propensity, outcome
 
@@ -168,11 +168,42 @@ def bootstrap_mean_design(
     )
 
 
+VARIANCE_METHODS = ("centered", "one_pass")
+
+
+def _check_variance_method(method: str) -> None:
+    if method not in VARIANCE_METHODS:
+        raise ValueError(f"variance_method must be one of {VARIANCE_METHODS}")
+
+
+def _batched_variance(backend, x, axis: int, n: int, method: str):
+    """Sample variance along ``axis`` (an observation axis of length ``n``).
+
+    ``centered`` subtracts the batch mean before squaring (two-pass), which is
+    numerically stable in float32 when the data have a large location.
+    ``one_pass`` uses ``(sum(x**2) - sum(x)**2 / n) / (n - 1)``; it is retained
+    to reproduce the v0.6.0 benchmark timings and is accurate only when the
+    data are approximately centred.
+    """
+
+    if method == "one_pass":
+        sums = backend.sum(x, axis=axis)
+        sum_squares = backend.sum(x * x, axis=axis)
+        return (sum_squares - sums * sums / float(n)) / float(n - 1)
+    means = backend.mean(x, axis=axis)
+    shape = list(x.shape)
+    shape[axis] = 1
+    deviations = x - means.reshape(shape)
+    return backend.sum(deviations * deviations, axis=axis) / float(n - 1)
+
+
 def congeneric_reliability_design(
     sample_sizes=(250, 1000),
     item_counts=(10, 20),
     loading_low: float = 0.6,
     loading_high: float = 0.9,
+    location_offset: float = 0.0,
+    variance_method: str = "centered",
 ) -> SimulationDesign:
     """Cronbach-alpha simulation under a continuous congeneric measurement model.
 
@@ -184,6 +215,7 @@ def congeneric_reliability_design(
 
     if not 0 < loading_low <= loading_high < 1:
         raise ValueError("loadings must satisfy 0 < loading_low <= loading_high < 1")
+    _check_variance_method(variance_method)
     conditions = []
     for n in sample_sizes:
         if int(n) < 3:
@@ -209,27 +241,22 @@ def congeneric_reliability_design(
         loadings, residual_sds = parameters(condition)
         ability = context.backend.normal((batch_size, n, 1), seed=context.seed)
         residuals = context.backend.normal(
-            (batch_size, n, items), seed=context.seed + 1
+            (batch_size, n, items), seed=context.seed_for(1)
         )
         return (
             ability * context.backend.asarray(loadings)
             + residuals * context.backend.asarray(residual_sds)
+            + float(location_offset)
         )
 
     def estimator(data, context, condition):
         n = int(condition["n"])
         items = int(condition["items"])
-        item_sums = context.backend.sum(data, axis=1)
-        item_sum_squares = context.backend.sum(data * data, axis=1)
-        item_variances = (
-            item_sum_squares - item_sums * item_sums / float(n)
-        ) / float(n - 1)
+        item_variances = _batched_variance(context.backend, data, 1, n, variance_method)
         total_scores = context.backend.sum(data, axis=2)
-        total_sum = context.backend.sum(total_scores, axis=1)
-        total_sum_squares = context.backend.sum(total_scores * total_scores, axis=1)
-        total_variance = (
-            total_sum_squares - total_sum * total_sum / float(n)
-        ) / float(n - 1)
+        total_variance = _batched_variance(
+            context.backend, total_scores, 1, n, variance_method
+        )
         alpha = (items / float(items - 1)) * (
             1.0 - context.backend.sum(item_variances, axis=1) / total_variance
         )
@@ -260,11 +287,14 @@ def cluster_randomized_trial_design(
     cluster_sizes=(20, 30),
     treatment_effect: float = 0.2,
     intraclass_correlation: float = 0.15,
+    location_offset: float = 0.0,
+    variance_method: str = "centered",
 ) -> SimulationDesign:
     """Balanced two-level educational cluster-randomized trial simulation."""
 
     if not 0 <= intraclass_correlation < 1:
         raise ValueError("intraclass_correlation must be in [0, 1)")
+    _check_variance_method(variance_method)
     conditions = []
     for clusters in cluster_counts:
         clusters = int(clusters)
@@ -301,13 +331,14 @@ def cluster_randomized_trial_design(
         )
         residual = context.backend.normal(
             (batch_size, clusters, cluster_size),
-            seed=context.seed + 1,
+            seed=context.seed_for(1),
             sd=(1.0 - icc) ** 0.5,
         )
         return (
             float(condition["treatment_effect"]) * treatment
             + random_intercept
             + residual
+            + float(location_offset)
         )
 
     def estimator(data, context, condition):
@@ -322,15 +353,25 @@ def cluster_randomized_trial_design(
         control_mean = control_sum / float(group_clusters)
         estimates = treated_mean - control_mean
 
-        squares = cluster_means * cluster_means
-        treated_variance = (
-            context.backend.sum(squares * treated, axis=1)
-            - treated_sum * treated_sum / float(group_clusters)
-        ) / float(group_clusters - 1)
-        control_variance = (
-            context.backend.sum(squares * control, axis=1)
-            - control_sum * control_sum / float(group_clusters)
-        ) / float(group_clusters - 1)
+        if variance_method == "one_pass":
+            squares = cluster_means * cluster_means
+            treated_variance = (
+                context.backend.sum(squares * treated, axis=1)
+                - treated_sum * treated_sum / float(group_clusters)
+            ) / float(group_clusters - 1)
+            control_variance = (
+                context.backend.sum(squares * control, axis=1)
+                - control_sum * control_sum / float(group_clusters)
+            ) / float(group_clusters - 1)
+        else:
+            treated_dev = (cluster_means - treated_mean.reshape(-1, 1)) * treated
+            control_dev = (cluster_means - control_mean.reshape(-1, 1)) * control
+            treated_variance = context.backend.sum(
+                treated_dev * treated_dev, axis=1
+            ) / float(group_clusters - 1)
+            control_variance = context.backend.sum(
+                control_dev * control_dev, axis=1
+            ) / float(group_clusters - 1)
         standard_errors = context.backend.sqrt(
             treated_variance / float(group_clusters)
             + control_variance / float(group_clusters)

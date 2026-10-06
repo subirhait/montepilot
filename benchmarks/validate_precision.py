@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -81,6 +82,10 @@ def main() -> None:
     parser.add_argument("--seed-step", type=int, default=100000)
     parser.add_argument("--backends", nargs="+")
     parser.add_argument("--output-dir", default="precision_validation_results")
+    parser.add_argument(
+        "--protocol-config",
+        help="Optional frozen protocol JSON supplying precision-specific tolerances.",
+    )
     args = parser.parse_args()
     if args.seeds < 1:
         raise SystemExit("seeds must be positive")
@@ -91,9 +96,22 @@ def main() -> None:
     if unknown:
         raise SystemExit(f"unavailable backends: {unknown}; available: {available}")
 
+    protocol = None
+    if args.protocol_config:
+        with Path(args.protocol_config).open(encoding="utf-8") as stream:
+            protocol = json.load(stream)
+
     rows: list[dict] = []
     failures: list[dict] = []
-    for case in precision_cases(args.profile):
+    for original_case in precision_cases(args.profile):
+        case = original_case
+        if protocol is not None:
+            tolerance = protocol["controlled_input_tolerances"]["generic"][args.precision][case.family]
+            case = replace(
+                case,
+                absolute_tolerance=float(tolerance["absolute"]),
+                relative_tolerance=float(tolerance["relative"]),
+            )
         for backend_name in selected:
             backend = ComputeBackend(backend_name, precision=args.precision)
             for seed_index in range(args.seeds):
@@ -130,6 +148,8 @@ def main() -> None:
         "seed": args.seed,
         "seed_step": args.seed_step,
         "selected_backends": selected,
+        "protocol_id": protocol.get("protocol_id") if protocol else None,
+        "protocol_tag": protocol.get("protocol_tag") if protocol else None,
         "environment": doctor(),
         "rows": rows,
         "failures": failures,

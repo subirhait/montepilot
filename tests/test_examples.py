@@ -67,6 +67,41 @@ class ExampleDesignTests(unittest.TestCase):
         self.assertIsNotNone(result.coverage)
         self.assertAlmostEqual(result.coverage, 0.95, delta=0.04)
 
+    def test_centered_and_one_pass_variance_agree_in_float64(self):
+        for factory in (
+            lambda m: congeneric_reliability_design(
+                sample_sizes=[200], item_counts=[8], variance_method=m
+            ),
+            lambda m: cluster_randomized_trial_design(
+                cluster_counts=[20], cluster_sizes=[10], variance_method=m
+            ),
+        ):
+            centered = run_design(factory("centered"), reps=300)
+            one_pass = run_design(factory("one_pass"), reps=300)
+            self.assertAlmostEqual(centered.estimate_mean, one_pass.estimate_mean, places=10)
+            self.assertAlmostEqual(centered.rmse, one_pass.rmse, places=10)
+
+    def test_centered_variance_is_stable_in_float32_with_large_location(self):
+        import numpy as np
+        from montepilot.backends import resolve_backend
+        from montepilot.examples import _batched_variance
+
+        rng = np.random.default_rng(7)
+        x64 = rng.standard_normal((50, 1000)) + 100.0
+        reference = x64.var(axis=1, ddof=1)
+        backend = resolve_backend("numpy", precision="float32")
+        x32 = backend.asarray(x64)
+        centered = np.asarray(_batched_variance(backend, x32, 1, 1000, "centered"))
+        one_pass = np.asarray(_batched_variance(backend, x32, 1, 1000, "one_pass"))
+        centered_error = np.max(np.abs(centered - reference))
+        one_pass_error = np.max(np.abs(one_pass - reference))
+        self.assertLess(centered_error, 1e-4)
+        self.assertGreater(one_pass_error, 10 * centered_error)
+
+    def test_invalid_variance_method_rejected(self):
+        with self.assertRaises(ValueError):
+            congeneric_reliability_design(variance_method="naive")
+
 
 if __name__ == "__main__":
     unittest.main()

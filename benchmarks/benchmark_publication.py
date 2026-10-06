@@ -398,6 +398,11 @@ def main() -> None:
         nargs="+",
         help="Optional workload names; omit to run the complete profile.",
     )
+    parser.add_argument(
+        "--backends",
+        nargs="+",
+        help="Optional backend names; omit to use every available backend.",
+    )
     args = parser.parse_args()
     if args.repeats < 2:
         raise SystemExit("repeats must be at least two")
@@ -412,7 +417,11 @@ def main() -> None:
             raise SystemExit(f"unknown workloads: {unknown}; available: {sorted(known)}")
         selected = set(args.workloads)
         suite = [item for item in suite if item.name in selected]
-    backends = available_backends()
+    available = available_backends()
+    backends = args.backends or available
+    unavailable = sorted(set(backends) - set(available))
+    if unavailable:
+        raise SystemExit(f"unavailable backends: {unavailable}; available: {available}")
     warm_rows = []
     calibrations = []
     failures = []
@@ -521,6 +530,7 @@ def main() -> None:
         "bootstrap_resamples": args.bootstrap_resamples,
         "seed": args.seed,
         "precision": args.precision,
+        "selected_backends": backends,
         "environment": doctor(),
         "calibration": calibrations,
         "warm_runs": warm_rows,

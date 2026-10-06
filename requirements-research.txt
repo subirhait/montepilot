@@ -1,0 +1,5 @@
+# Dependencies used by the manuscript's hardware-independent supplementary run.
+numpy>=1.24
+scipy>=1.12
+
+# Install an appropriate PyTorch build separately for CPU, CUDA, or Intel XPU.

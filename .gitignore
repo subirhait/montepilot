@@ -1,78 +1,18 @@
-# Python cache and compiled files
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-*.pyd
-
-# Python packaging
-build/
-dist/
 *.egg-info/
-.eggs/
-pip-wheel-metadata/
-
-# Test coverage and development caches
 .pytest_cache/
 .ruff_cache/
-.mypy_cache/
-.coverage
-.coverage.*
-coverage.xml
-htmlcov/
-.tox/
-.nox/
-
-# Virtual environments
 .venv/
 venv/
-env/
-ENV/
-conda-env/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# MontePilot generated files
+dist/
+dist_check/
+build/
 checkpoints/
 benchmark_results/
-benchmark_results_*/
-precision_validation_results*/
-local_application_benchmark_smoke*/
-local_precision_check/
+irls_benchmark_results_v062/
+protocol_v062_*/
+protocol_v062_*.zip
 r_benchmark_results.csv
-
-# Compressed local archives
-*.zip
-
-# R generated files
 *.Rcheck/
 .Rproj.user/
-.Rhistory
-.RData
-.Ruserdata
-.Renviron
-
-# Environment variables and secrets
-.env
-.env.*
-!.env.example
-*.pem
-*.key
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Operating system files
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# Temporary files and logs
-*.log
-*.tmp
-*.temp
-~$*

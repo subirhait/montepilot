@@ -1,0 +1,46 @@
+MontePilot 0.6.2 frozen-protocol workflow (RunPod A100)
+======================================================
+
+Use an official PyTorch CUDA image. Debug the smoke run before starting the
+full timed run. Current instance prices vary; check the displayed rate before
+deployment and terminate the pod immediately after verified download.
+
+1. Obtain the frozen repository and verify CUDA
+
+git clone https://github.com/subirhait/montepilot.git
+cd montepilot
+git fetch --tags
+git checkout main
+python -m pip install -e ".[research]"
+python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CUDA NOT AVAILABLE')"
+montepilot doctor
+python -m unittest discover -s tests -v
+git rev-list -n 1 protocol-v0.6.2
+
+Stop if CUDA is unavailable, if the tag is missing, or if the test suite does
+not pass. The tag hash must match RESULT_PROVENANCE.md.
+
+2. Smoke test (not manuscript evidence)
+
+python benchmarks/run_frozen_protocol.py --phase a100 --smoke --output-dir protocol_v062_a100_smoke
+
+Inspect protocol_v062_a100_smoke/logs. Confirm that numpy, torch_cpu, and
+torch_cuda appear for float32 and float64.
+
+3. Full A100 run
+
+python benchmarks/run_frozen_protocol.py --phase a100 --output-dir protocol_v062_a100_full
+
+The full phase runs the prespecified generic suite and logistic IRLS on NumPy,
+Torch CPU, and Torch CUDA at float32 and float64. It also runs controlled-input
+validation and captures the complete environment.
+
+4. Verify before download
+
+python benchmarks/verify_checksums.py protocol_v062_a100_full
+sha256sum protocol_v062_a100_full.zip
+
+Download protocol_v062_a100_full.zip and record the printed ZIP checksum.
+Verify the extracted directory again on the local computer before terminating
+the pod. A stopped pod can continue to incur storage charges; terminate it
+after the files are safely downloaded and verified.

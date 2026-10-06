@@ -1,0 +1,54 @@
+MontePilot 0.6.2 frozen-protocol workflow (Windows / Anaconda Prompt)
+====================================================================
+
+Run these commands from the MontePilot repository root. Do not begin the full
+timed run until the protocol commit and tag exist.
+
+1. Activate and install
+
+conda activate montepilot
+python -m pip install -e ".[research]"
+montepilot doctor
+python -m unittest discover -s tests -v
+
+Expected CPU-side test result: 45 tests, OK. On the Intel laptop, `doctor`
+should list numpy, torch_cpu, and torch_xpu.
+
+2. Commit and tag the frozen protocol
+
+git status
+git add .
+git commit -m "Freeze v0.6.2 IRLS and CUDA benchmark protocol"
+git tag -a protocol-v0.6.2 -m "Frozen MontePilot v0.6.2 pre-submission protocol"
+git rev-list -n 1 protocol-v0.6.2
+
+Copy the printed hash into RESULT_PROVENANCE.md in place of
+TO_BE_RECORDED_AFTER_TAGGING. Then run:
+
+git add RESULT_PROVENANCE.md
+git commit -m "Record frozen protocol commit"
+git push origin main
+git push origin protocol-v0.6.2
+
+Do not change the protocol, IRLS implementation, or benchmark harness after
+the tag. Record any unavoidable change as a dated deviation instead.
+
+3. Smoke test (not manuscript evidence)
+
+python benchmarks\run_frozen_protocol.py --phase laptop --smoke --output-dir protocol_v062_laptop_smoke
+
+Inspect protocol_v062_laptop_smoke\logs and confirm that NumPy, Torch CPU, and
+Torch XPU all ran. Smoke estimates and timings must not be reported in the
+paper.
+
+4. Full laptop run
+
+python benchmarks\run_frozen_protocol.py --phase laptop --output-dir protocol_v062_laptop_full
+
+5. Verify the result directory
+
+python benchmarks\verify_checksums.py protocol_v062_laptop_full
+
+The runner also creates protocol_v062_laptop_full.zip. Keep the directory and
+ZIP unchanged. Copy the final console output and any errors into the research
+log.

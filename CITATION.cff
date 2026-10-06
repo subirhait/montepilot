@@ -1,13 +1,27 @@
 cff-version: 1.2.0
-message: "If you use this development prototype, please cite the software archive."
+message: "If you use MontePilot, please cite the archived software project and identify the release used."
 title: "MontePilot: Adaptive Device-Aware Monte Carlo Simulation"
 type: software
 authors:
-  - family-names: "Hait"
-    given-names: "Subir"
-version: "0.6.0.dev0"
-date-released: "2026-10-03"
-doi: "10.5281/zenodo.23127965"
-license: "MIT"
+  - family-names: Hait
+    given-names: Subir
+    affiliation: "Michigan State University"
+version: 0.6.2
+date-released: 2026-10-05
+license: MIT
 repository-code: "https://github.com/subirhait/montepilot"
 url: "https://github.com/subirhait/montepilot"
+abstract: >-
+  An adaptive, device-aware framework for reproducible Monte Carlo simulation
+  with vectorized execution, precision-based stopping, checkpoint recovery,
+  numerical validation, and optional NumPy and PyTorch backends.
+keywords:
+  - Monte Carlo simulation
+  - statistical software
+  - GPU computing
+  - adaptive stopping
+  - reproducibility
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23127964"
+    description: "Zenodo concept DOI for all MontePilot releases"

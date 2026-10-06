@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import argparse
 import csv
 import json
@@ -35,6 +37,11 @@ class Workload:
     batch_size: int
     size_metric: int | None
     design_factory: Callable
+
+
+# The v0.6.0 application timings reported in the manuscript used the one-pass
+# variance form.  Set MONTEPILOT_APP_VARIANCE=centered to time the stable form.
+APPLICATION_VARIANCE_METHOD = os.environ.get("MONTEPILOT_APP_VARIANCE", "one_pass")
 
 
 def workloads(profile: str) -> list[Workload]:
@@ -99,7 +106,8 @@ def workloads(profile: str) -> list[Workload]:
                 batch_size=100,
                 size_metric=(1000 * 20 * (1000 if profile == "quick" else 2000)),
                 design_factory=lambda: congeneric_reliability_design(
-                    sample_sizes=[1000], item_counts=[20]
+                    sample_sizes=[1000], item_counts=[20],
+                    variance_method=APPLICATION_VARIANCE_METHOD,
                 ),
             ),
             Workload(
@@ -109,7 +117,8 @@ def workloads(profile: str) -> list[Workload]:
                 batch_size=500,
                 size_metric=(100 * 30 * (2000 if profile == "quick" else 5000)),
                 design_factory=lambda: cluster_randomized_trial_design(
-                    cluster_counts=[100], cluster_sizes=[30]
+                    cluster_counts=[100], cluster_sizes=[30],
+                    variance_method=APPLICATION_VARIANCE_METHOD,
                 ),
             ),
         ]
