@@ -10,7 +10,7 @@ The frozen pre-submission extension is defined by `PROTOCOL.md` and
 below with the commit resolved by tag `protocol-v0.6.2`:
 
 ```text
-protocol-v0.6.2 commit: TO_BE_RECORDED_AFTER_TAGGING
+protocol-v0.6.2 commit: 8fd8a3eb61e24fc66f73d4e704e5b699f72ac5cd
 ```
 
 | Manuscript evidence | Generating release | Source archive | Machine-readable output |
