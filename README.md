@@ -102,13 +102,18 @@ python benchmarks/supplementary_experiments.py
 ```
 
 The prespecified v0.6.2 logistic-IRLS and CUDA extension is frozen in
-`PROTOCOL.md` and `benchmarks/protocol_v062.json`. Before a full timed run,
-commit and tag the protocol as described there. Smoke tests are launched with:
+`PROTOCOL.md` and `benchmarks/protocol_v062.json` at the existing annotated
+tag `protocol-v0.6.2`. Preserve that tag. Smoke tests are launched with:
 
 ```bash
 python benchmarks/run_frozen_protocol.py --phase laptop --smoke
 python benchmarks/run_frozen_protocol.py --phase a100 --smoke
 ```
+
+For full evidence collection, use the reviewed hardened launcher and follow
+[the frozen execution and audit procedure](docs/FROZEN_PROTOCOL_EXECUTION.md).
+It verifies the pinned tag, configuration, and calculation source and records
+the launcher revision separately from the frozen benchmark revision.
 
 The archived article evidence is organized as follows:
 

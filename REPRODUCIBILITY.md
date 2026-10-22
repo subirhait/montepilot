@@ -34,7 +34,8 @@ python -m unittest discover -s tests -v
 montepilot doctor
 ```
 
-The base NumPy test suite contains 45 tests. Optional accelerators require the
+The base NumPy test suite includes frozen-protocol provenance regressions.
+Optional accelerators require the
 appropriate PyTorch build and device drivers.
 
 ## Recreate controlled-input validation
@@ -99,3 +100,11 @@ Warm-state timings exclude interpreter startup and most device initialization.
 Fresh-process timings include Python startup, imports, backend initialization,
 computation, and process exit. Neither timing boundary is a hardware-cold
 measurement because operating-system and driver caches may persist.
+
+## Frozen laptop and A100 extension
+
+Use the [frozen execution and audit procedure](docs/FROZEN_PROTOCOL_EXECUTION.md)
+with a reviewed hardened-launcher revision. Its workers execute the original
+frozen source snapshot and record the launcher and calculation commits
+separately. Smoke results and failed/partial collections are diagnostics only.
+The two full hardware evidence collections remain pending.
