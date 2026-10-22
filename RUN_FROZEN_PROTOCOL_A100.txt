@@ -1,46 +1,65 @@
-MontePilot 0.6.2 frozen-protocol workflow (RunPod A100)
-======================================================
+MontePilot 0.6.2 frozen-protocol workflow (A100)
+===============================================
 
-Use an official PyTorch CUDA image. Debug the smoke run before starting the
-full timed run. Current instance prices vary; check the displayed rate before
-deployment and terminate the pod immediately after verified download.
+Read docs/FROZEN_PROTOCOL_EXECUTION.md for the complete audit procedure.
+Use an appropriate PyTorch CUDA environment on the actual A100 hardware.
+The original protocol tag already exists. Do not recreate or move it.
 
-1. Obtain the frozen repository and verify CUDA
+1. Obtain a reviewed launcher and verify the frozen tag
 
-git clone https://github.com/subirhait/montepilot.git
+git clone -c core.autocrlf=false https://github.com/subirhait/montepilot.git
 cd montepilot
-git fetch --tags
-git checkout main
+git fetch origin --tags
+git checkout --detach <reviewed-launcher-commit>
+git rev-parse HEAD
+git cat-file -t refs/tags/protocol-v0.6.2
+git rev-list -n 1 refs/tags/protocol-v0.6.2
+git status --short
+
+Replace <reviewed-launcher-commit> with the reviewed hardened-launcher SHA.
+The tag type must be "tag" and the resolved commit must be:
+8fd8a3eb61e24fc66f73d4e704e5b699f72ac5cd
+Do not launch from the old tag: its runner lacks these safeguards.
+
 python -m pip install -e ".[research]"
 python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CUDA NOT AVAILABLE')"
-montepilot doctor
+python -m montepilot.cli doctor
 python -m unittest discover -s tests -v
-git rev-list -n 1 protocol-v0.6.2
 
-Stop if CUDA is unavailable, if the tag is missing, or if the test suite does
-not pass. The tag hash must match RESULT_PROVENANCE.md.
+Stop if CUDA is unavailable, the GPU is not the intended A100, the tag hash
+mismatches, or tests fail. Full runs require a clean tracked tree. Frozen
+configuration and calculation-source bytes are checked automatically.
 
-2. Smoke test (not manuscript evidence)
+2. Smoke test (diagnostics only)
 
 python benchmarks/run_frozen_protocol.py --phase a100 --smoke --output-dir protocol_v062_a100_smoke
 
-Inspect protocol_v062_a100_smoke/logs. Confirm that numpy, torch_cpu, and
-torch_cuda appear for float32 and float64.
+Inspect logs and reports. Confirm numpy, torch_cpu, and torch_cuda for both
+float32 and float64, including numerical validation. Correct the environment
+before full execution. Retain failed attempts and choose a new output path
+for every retry. Smoke results are not manuscript evidence.
 
 3. Full A100 run
 
 python benchmarks/run_frozen_protocol.py --phase a100 --output-dir protocol_v062_a100_full
 
-The full phase runs the prespecified generic suite and logistic IRLS on NumPy,
-Torch CPU, and Torch CUDA at float32 and float64. It also runs controlled-input
-validation and captures the complete environment.
+The original IRLS, generic suite, controlled-input validation, five-seed design,
+and FP32/FP64 comparisons are preserved. The hardened launcher runs benchmark
+calculations from an extracted snapshot of the pinned protocol commit.
 
-4. Verify before download
+4. Verify, transfer, and archive
 
 python benchmarks/verify_checksums.py protocol_v062_a100_full
 sha256sum protocol_v062_a100_full.zip
 
-Download protocol_v062_a100_full.zip and record the printed ZIP checksum.
-Verify the extracted directory again on the local computer before terminating
-the pod. A stopped pod can continue to incur storage charges; terminate it
-after the files are safely downloaded and verified.
+Audit run_identity.json: status completed, smoke false, both protocol_commit
+and execution_source_commit equal the frozen SHA, executing_commit identifies
+the separate reviewed launcher revision, and configuration digests match.
+Inspect every report for requested hardware, all conditions/precisions,
+numerical comparisons, and failures. Process completion alone is insufficient.
+
+Download the ZIP, compare its SHA-256 with the value recorded on the A100,
+extract it, and rerun verify_checksums.py locally. Preserve the unchanged
+source/configuration/launcher, raw results, environment, logs, and manifest.
+Only after verified download should the instance be terminated. Then update
+the pending A100 provenance row with both revision IDs and archive checksums.
